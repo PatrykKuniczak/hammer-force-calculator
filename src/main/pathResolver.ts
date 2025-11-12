@@ -3,10 +3,10 @@ import { app } from 'electron';
 import path, { join } from 'path';
 import type { BrowserWindow } from 'electron';
 
-export const getAssetPath = (): string =>
+export const getAssetPath = () =>
   is.dev ? path.join(app.getAppPath(), 'resources') : path.join(process.resourcesPath, 'resources');
 
-export const getAppPath = (mainWindow: BrowserWindow): void => {
+export const getAppPath = (mainWindow: BrowserWindow) => {
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {

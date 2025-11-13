@@ -10,6 +10,19 @@ export class ValidationError extends Error {
 }
 
 /**
+ * Truncates a number to a fixed precision of 3 decimal places.
+ * The precision is explicitly set via a constant and is not using default rounding.
+ * Ensures very small results return 0 and avoids returning -0.
+ */
+export const roundTo3 = (value: number) => {
+  const PRECISION_DECIMALS = 3;
+  const PRECISION_FACTOR = 10 ** PRECISION_DECIMALS;
+  const truncated = Math.trunc(value * PRECISION_FACTOR) / PRECISION_FACTOR;
+  // Avoid "-0"
+  return Object.is(truncated, -0) ? 0 : truncated;
+};
+
+/**
  * Checks that all values in the provided object are finite numbers and > 0.
  * Throws ValidationError on the first violation.
  *

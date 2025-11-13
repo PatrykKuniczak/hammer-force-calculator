@@ -1,4 +1,4 @@
-import { validatePositiveInputs, ValidationError } from './util';
+import { roundTo3, validatePositiveInputs, ValidationError } from './util';
 
 /**
  * @param value - e.g `100`
@@ -12,28 +12,28 @@ export const toSIConverter = (value: number, fromUnit: string, toUnit: string) =
     case 'mm':
       switch (toUnit) {
         case 'm':
-          return value / 1000;
+          return roundTo3(value / 1000);
         default:
           throw new Error(`Invalid toUnit ${toUnit}`);
       }
     case 'cm':
       switch (toUnit) {
         case 'm':
-          return value / 100;
+          return roundTo3(value / 100);
         default:
           throw new Error(`Invalid toUnit ${toUnit}`);
       }
     case 'm':
       switch (toUnit) {
         case 'cm':
-          return value * 100;
+          return roundTo3(value * 100);
         default:
           throw new Error(`Invalid toUnit ${toUnit}`);
       }
     case 'MPa':
       switch (toUnit) {
         case 'Pa':
-          return value * 1_000_000;
+          return roundTo3(value * 1_000_000);
         default:
           throw new Error(`Invalid toUnit ${toUnit}`);
       }
@@ -54,8 +54,7 @@ export const calculateTotalArmLength = (
   hammerHeadHeight: number,
 ) => {
   validatePositiveInputs({ armLength, handleToHammerHeadLength, hammerHeadHeight });
-
-  return armLength + handleToHammerHeadLength + hammerHeadHeight / 2;
+  return roundTo3(armLength + handleToHammerHeadLength + hammerHeadHeight / 2);
 };
 
 /**
@@ -65,7 +64,7 @@ export const calculateTotalArmLength = (
  */
 export const calculateVelocity = (roadLength: number, travelTime: number) => {
   validatePositiveInputs({ roadLength, travelTime });
-  return roadLength / travelTime;
+  return roundTo3(roadLength / travelTime);
 };
 
 /**
@@ -75,7 +74,7 @@ export const calculateVelocity = (roadLength: number, travelTime: number) => {
  */
 export const calculateTotalMass = (hammerWeight: number, armWeight: number) => {
   validatePositiveInputs({ hammerWeight, armWeight });
-  return hammerWeight + armWeight;
+  return roundTo3(hammerWeight + armWeight);
 };
 
 /**
@@ -85,7 +84,7 @@ export const calculateTotalMass = (hammerWeight: number, armWeight: number) => {
  */
 export const calculateKineticEnergy = (totalMass: number, velocity: number) => {
   validatePositiveInputs({ totalMass, velocity });
-  return 0.5 * totalMass * velocity ** 2;
+  return roundTo3(0.5 * totalMass * velocity ** 2);
 };
 
 /**
@@ -95,7 +94,7 @@ export const calculateKineticEnergy = (totalMass: number, velocity: number) => {
  */
 export const calculateNailShaftCrossSection = (diameter: number) => {
   validatePositiveInputs({ diameter });
-  return Math.PI * (diameter / 2) ** 2;
+  return roundTo3(Math.PI * (diameter / 2) ** 2);
 };
 
 /**
@@ -114,7 +113,7 @@ export const calculateConeCrossSectionAvg = (diameter: number, coneLength: numbe
   const halfConeAngleRad = ((coneAngleDeg / 2) * Math.PI) / 180;
   const rTip = baseRadius - coneLength * Math.tan(halfConeAngleRad);
   const avgRadius = (baseRadius + rTip) / 2;
-  return Math.PI * avgRadius ** 2;
+  return roundTo3(Math.PI * avgRadius ** 2);
 };
 
 /**
@@ -148,7 +147,7 @@ export const calculateFrictionForce = (
 
   const totalNormalForce = frictionShaft + frictionCone;
 
-  return totalNormalForce * nailFrictionCoefficient;
+  return roundTo3(totalNormalForce * nailFrictionCoefficient);
 };
 
 /**
@@ -159,7 +158,7 @@ export const calculateFrictionForce = (
  */
 export const calculateMaxPenetrationDepth = (kineticEnergy: number, frictionForce: number) => {
   validatePositiveInputs({ kineticEnergy, frictionForce });
-  return kineticEnergy / frictionForce;
+  return roundTo3(kineticEnergy / frictionForce);
 };
 
 /**
@@ -171,5 +170,5 @@ export const calculateMaxPenetrationDepth = (kineticEnergy: number, frictionForc
  */
 export const calculatePenetrationPercentage = (maxPenetrationDepth: number, materialHeight: number) => {
   validatePositiveInputs({ maxPenetrationDepth, materialHeight });
-  return (maxPenetrationDepth / materialHeight) * 100;
+  return roundTo3((maxPenetrationDepth / materialHeight) * 100);
 };

@@ -1,3 +1,5 @@
+import { validatePositiveInputs, ValidationError } from './util';
+
 /**
  * @param value - e.g `100`
  * @param fromUnit - e.g `cm`
@@ -5,6 +7,7 @@
  * @returns Converted value e.g. `1`
  */
 export const toSIConverter = (value: number, fromUnit: string, toUnit: string) => {
+  validatePositiveInputs({ value });
   switch (fromUnit) {
     case 'mm':
       switch (toUnit) {
@@ -49,35 +52,51 @@ export const calculateTotalArmLength = (
   armLength: number,
   handleToHammerHeadLength: number,
   hammerHeadHeight: number,
-) => armLength + handleToHammerHeadLength + hammerHeadHeight / 2;
+) => {
+  validatePositiveInputs({ armLength, handleToHammerHeadLength, hammerHeadHeight });
+
+  return armLength + handleToHammerHeadLength + hammerHeadHeight / 2;
+};
 
 /**
  * @param roadLength (m)
  * @param travelTime (s)
  * @returns Velocity (m/s)
  */
-export const calculateVelocity = (roadLength: number, travelTime: number) => roadLength / travelTime;
+export const calculateVelocity = (roadLength: number, travelTime: number) => {
+  validatePositiveInputs({ roadLength, travelTime });
+  return roadLength / travelTime;
+};
 
 /**
  * @param hammerWeight (kg)
  * @param armWeight (kg)
  * @returns Sum of Masses (kg)
  */
-export const calculateTotalMass = (hammerWeight: number, armWeight: number) => hammerWeight + armWeight;
+export const calculateTotalMass = (hammerWeight: number, armWeight: number) => {
+  validatePositiveInputs({ hammerWeight, armWeight });
+  return hammerWeight + armWeight;
+};
 
 /**
  * @param totalMass (kg)
  * @param velocity (m/s)
  * @returns Kinetic Energy (J)
  */
-export const calculateKineticEnergy = (totalMass: number, velocity: number) => 0.5 * totalMass * velocity ** 2;
+export const calculateKineticEnergy = (totalMass: number, velocity: number) => {
+  validatePositiveInputs({ totalMass, velocity });
+  return 0.5 * totalMass * velocity ** 2;
+};
 
 /**
  * Calculates cross-sectional area of the nail shaft (cylindrical part).
  * @param diameter - Diameter of the shaft (m).
  * @returns Cross-sectional area (m²).
  */
-export const calculateNailShaftCrossSection = (diameter: number) => Math.PI * (diameter / 2) ** 2;
+export const calculateNailShaftCrossSection = (diameter: number) => {
+  validatePositiveInputs({ diameter });
+  return Math.PI * (diameter / 2) ** 2;
+};
 
 /**
  * Calculates average cross-sectional area of the conical tip based on cone length and angle.
@@ -89,6 +108,8 @@ export const calculateNailShaftCrossSection = (diameter: number) => Math.PI * (d
  * @returns Average area of the cone cross-section (m²).
  */
 export const calculateConeCrossSectionAvg = (diameter: number, coneLength: number, coneAngleDeg: number) => {
+  if (coneAngleDeg < 0) throw new ValidationError('coneAngleDeg', coneAngleDeg, 'Cone angle must be positive.');
+  validatePositiveInputs({ diameter, coneLength });
   const baseRadius = diameter / 2;
   const halfConeAngleRad = ((coneAngleDeg / 2) * Math.PI) / 180;
   const rTip = baseRadius - coneLength * Math.tan(halfConeAngleRad);
@@ -116,6 +137,8 @@ export const calculateFrictionForce = (
   coneAngleDeg: number,
   nailFrictionCoefficient = 0.4,
 ) => {
+  if (coneAngleDeg < 0) throw new ValidationError('coneAngleDeg', coneAngleDeg, 'Cone angle must be positive.');
+  validatePositiveInputs({ diameter, materialHardness, nailLength, coneLength, nailFrictionCoefficient });
   const shaftLength = nailLength - coneLength;
   const shaftArea = calculateNailShaftCrossSection(diameter);
   const coneAreaAvg = calculateConeCrossSectionAvg(diameter, coneLength, coneAngleDeg);
@@ -134,8 +157,10 @@ export const calculateFrictionForce = (
  * @param frictionForce - Friction force resisting penetration (N).
  * @returns Maximum penetration depth (m).
  */
-export const calculateMaxPenetrationDepth = (kineticEnergy: number, frictionForce: number) =>
-  kineticEnergy / frictionForce;
+export const calculateMaxPenetrationDepth = (kineticEnergy: number, frictionForce: number) => {
+  validatePositiveInputs({ kineticEnergy, frictionForce });
+  return kineticEnergy / frictionForce;
+};
 
 /**
  * Calculates percentage of nail penetrated given max penetration depth and material length.
@@ -144,5 +169,7 @@ export const calculateMaxPenetrationDepth = (kineticEnergy: number, frictionForc
  * @param materialHeight - Length of material being penetrated (m).
  * @returns Penetration as percentage of material length.
  */
-export const calculatePenetrationPercentage = (maxPenetrationDepth: number, materialHeight: number) =>
-  (maxPenetrationDepth / materialHeight) * 100;
+export const calculatePenetrationPercentage = (maxPenetrationDepth: number, materialHeight: number) => {
+  validatePositiveInputs({ maxPenetrationDepth, materialHeight });
+  return (maxPenetrationDepth / materialHeight) * 100;
+};

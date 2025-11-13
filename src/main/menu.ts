@@ -1,6 +1,6 @@
 import { app, Menu } from 'electron';
 
-export const createMenu = (): void => {
+export const createMenu = () => {
   Menu.setApplicationMenu(
     Menu.buildFromTemplate([
       {

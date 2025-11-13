@@ -6,7 +6,7 @@ import type { BrowserWindow } from 'electron';
 
 let trayRef: Tray | null = null;
 
-export const createTray = (mainWindow: BrowserWindow): void => {
+export const createTray = (mainWindow: BrowserWindow) => {
   if (trayRef) return;
 
   const iconPath = path.join(getAssetPath(), platform.isMacOS ? 'trayIconTemplate.png' : 'trayIcon.png');

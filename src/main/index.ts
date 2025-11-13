@@ -5,7 +5,7 @@ import { electronApp, is, optimizer, platform } from '@electron-toolkit/utils';
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
 
-const handleCloseEvents = (mainWindow: BrowserWindow): void => {
+const handleCloseEvents = (mainWindow: BrowserWindow) => {
   let willClose = false;
 
   mainWindow.on('close', e => {

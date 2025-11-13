@@ -10,6 +10,7 @@ import {
   calculateVelocity,
   toSIConverter,
 } from './calculations';
+import { ValidationError } from './util';
 import { describe, expect, it } from 'vitest';
 
 describe('toSIConverter', () => {
@@ -36,6 +37,15 @@ describe('toSIConverter', () => {
     expect(() => toSIConverter(1, 'km', 'm')).toThrowError(/Invalid fromUnit/);
     expect(() => toSIConverter(1, 'cm', 'km')).toThrowError(/Invalid toUnit/);
   });
+
+  it('throws ValidationError for negative value', () => {
+    expect(() => toSIConverter(-5, 'cm', 'm')).toThrowError(ValidationError);
+    expect(() => toSIConverter(-0.1, 'm', 'cm')).toThrowError(/Invalid value/);
+  });
+
+  it('throws ValidationError for zero value', () => {
+    expect(() => toSIConverter(0, 'cm', 'm')).toThrowError(ValidationError);
+  });
 });
 
 describe('calculateTotalArmLength', () => {
@@ -45,6 +55,18 @@ describe('calculateTotalArmLength', () => {
 
   it('works with fractional inputs', () => {
     expect(calculateTotalArmLength(0.75, 0.125, 0.03)).toBeCloseTo(0.75 + 0.125 + 0.015, 10);
+  });
+
+  it('throws ValidationError for negative inputs', () => {
+    expect(() => calculateTotalArmLength(-0.6, 0.3, 0.04)).toThrowError(ValidationError);
+    expect(() => calculateTotalArmLength(0.6, -0.3, 0.04)).toThrowError(ValidationError);
+    expect(() => calculateTotalArmLength(0.6, 0.3, -0.04)).toThrowError(ValidationError);
+  });
+
+  it('throws ValidationError for zero inputs', () => {
+    expect(() => calculateTotalArmLength(0, 0.3, 0.04)).toThrowError(ValidationError);
+    expect(() => calculateTotalArmLength(0.6, 0, 0.04)).toThrowError(ValidationError);
+    expect(() => calculateTotalArmLength(0.6, 0.3, 0)).toThrowError(ValidationError);
   });
 });
 
@@ -56,6 +78,14 @@ describe('calculateVelocity', () => {
   it('handles floating point division', () => {
     expect(calculateVelocity(1, 3)).toBeCloseTo(0.3333333333, 9);
   });
+
+  it('throws ValidationError for negative distance', () => {
+    expect(() => calculateVelocity(-10, 2)).toThrowError(ValidationError);
+  });
+
+  it('throws ValidationError for negative time', () => {
+    expect(() => calculateVelocity(10, -2)).toThrowError(/Invalid value/);
+  });
 });
 
 describe('calculateTotalMass', () => {
@@ -65,6 +95,16 @@ describe('calculateTotalMass', () => {
 
   it('adds masses (decimals)', () => {
     expect(calculateTotalMass(1.25, 0.75)).toBe(2);
+  });
+
+  it('throws ValidationError for negative inputs', () => {
+    expect(() => calculateTotalMass(-2, 1)).toThrowError(ValidationError);
+    expect(() => calculateTotalMass(2, -1)).toThrowError(ValidationError);
+  });
+
+  it('throws ValidationError for zero inputs', () => {
+    expect(() => calculateTotalMass(0, 1)).toThrowError(ValidationError);
+    expect(() => calculateTotalMass(1, 0)).toThrowError(ValidationError);
   });
 });
 
@@ -76,12 +116,25 @@ describe('calculateKineticEnergy', () => {
   it('works with non-integer values', () => {
     expect(calculateKineticEnergy(1.5, 2.2)).toBeCloseTo(0.5 * 1.5 * 2.2 ** 2, 10);
   });
+
+  it('throws ValidationError for negative mass', () => {
+    expect(() => calculateKineticEnergy(-1, 2)).toThrowError(ValidationError);
+  });
+
+  it('throws ValidationError for negative velocity', () => {
+    expect(() => calculateKineticEnergy(1, -2)).toThrowError(/Invalid value/);
+  });
 });
 
 describe('calculateNailShaftCrossSection', () => {
   it('computes circular area from diameter', () => {
     // diameter = 0.01 m => r = 0.005 m => area = pi * r^2 ≈ 7.853981633974483e-5
     expect(calculateNailShaftCrossSection(0.01)).toBeCloseTo(7.853981633974483e-5, 12);
+  });
+
+  it('throws ValidationError for non-positive diameter', () => {
+    expect(() => calculateNailShaftCrossSection(-0.01)).toThrowError(ValidationError);
+    expect(() => calculateNailShaftCrossSection(0)).toThrowError(ValidationError);
   });
 });
 
@@ -90,6 +143,21 @@ describe('calculateConeCrossSectionAvg', () => {
     // d = 0.01 m, coneLength = 0.005 m, coneAngle = 30°
     // Expected ≈ 5.890486225480862e-5 m^2
     expect(calculateConeCrossSectionAvg(0.01, 0.005, 30)).toBeCloseTo(5.890486225480862e-5, 12);
+  });
+
+  it('throws ValidationError for negative diameter or cone length', () => {
+    expect(() => calculateConeCrossSectionAvg(-0.01, 0.005, 30)).toThrowError(ValidationError);
+    expect(() => calculateConeCrossSectionAvg(0.01, -0.005, 30)).toThrowError(ValidationError);
+  });
+
+  it('throws ValidationError for negative cone angle', () => {
+    expect(() => calculateConeCrossSectionAvg(0.01, 0.005, -5)).toThrowError(ValidationError);
+  });
+
+  it('handles 0° cone angle (area equals shaft cross-section)', () => {
+    const d = 0.01;
+    const shaftArea = calculateNailShaftCrossSection(d);
+    expect(calculateConeCrossSectionAvg(d, 0.005, 0)).toBeCloseTo(shaftArea, 12);
   });
 });
 
@@ -104,11 +172,38 @@ describe('calculateFrictionForce', () => {
     // Same as above but with coefficient = 0.5 => ≈ 1.7812431304 N
     expect(calculateFrictionForce(0.01, 1_000_000, 0.05, 0.01, 30, 0.5)).toBeCloseTo(1.7812431304, 8);
   });
+
+  it('throws ValidationError for negative inputs', () => {
+    expect(() => calculateFrictionForce(-0.01, 1_000_000, 0.05, 0.01, 30, 0.4)).toThrowError(ValidationError);
+    expect(() => calculateFrictionForce(0.01, -1_000_000, 0.05, 0.01, 30, 0.4)).toThrowError(ValidationError);
+    expect(() => calculateFrictionForce(0.01, 1_000_000, -0.05, 0.01, 30, 0.4)).toThrowError(ValidationError);
+    expect(() => calculateFrictionForce(0.01, 1_000_000, 0.05, -0.01, 30, 0.4)).toThrowError(ValidationError);
+  });
+
+  it('throws ValidationError for negative cone angle', () => {
+    expect(() => calculateFrictionForce(0.01, 1_000_000, 0.05, 0.01, -30, 0.4)).toThrowError(ValidationError);
+  });
+
+  it('throws ValidationError when friction coefficient is 0', () => {
+    expect(() => calculateFrictionForce(0.01, 1_000_000, 0.05, 0.01, 30, 0)).toThrowError(ValidationError);
+  });
+
+  it('throws ValidationError for negative friction coefficient', () => {
+    expect(() => calculateFrictionForce(0.01, 1_000_000, 0.05, 0.01, 30, -0.1)).toThrowError(ValidationError);
+  });
 });
 
 describe('calculateMaxPenetrationDepth', () => {
   it('returns KE / friction', () => {
     expect(calculateMaxPenetrationDepth(10, 2)).toBe(5);
+  });
+
+  it('throws ValidationError for negative kinetic energy', () => {
+    expect(() => calculateMaxPenetrationDepth(-10, 2)).toThrowError(ValidationError);
+  });
+
+  it('throws ValidationError for negative friction force', () => {
+    expect(() => calculateMaxPenetrationDepth(10, -2)).toThrowError(/Invalid value/);
   });
 });
 
@@ -119,5 +214,13 @@ describe('calculatePenetrationPercentage', () => {
 
   it('can exceed 100% if max depth is greater than material height (no capping)', () => {
     expect(calculatePenetrationPercentage(0.06, 0.05)).toBe(120);
+  });
+
+  it('throws ValidationError for negative depth', () => {
+    expect(() => calculatePenetrationPercentage(-0.01, 0.05)).toThrowError(ValidationError);
+  });
+
+  it('throws ValidationError for negative material height', () => {
+    expect(() => calculatePenetrationPercentage(0.01, -0.05)).toThrowError(/Invalid value/);
   });
 });

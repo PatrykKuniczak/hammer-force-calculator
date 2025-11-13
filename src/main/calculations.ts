@@ -1,4 +1,4 @@
-import { roundTo3, validatePositiveInputs, ValidationError } from './util';
+import { roundTo3, validateInputsPositivity, ValidationError } from './util';
 
 /**
  * @param value - e.g `100`
@@ -7,7 +7,7 @@ import { roundTo3, validatePositiveInputs, ValidationError } from './util';
  * @returns Converted value e.g. `1`
  */
 export const toSIConverter = (value: number, fromUnit: string, toUnit: string) => {
-  validatePositiveInputs({ value });
+  validateInputsPositivity({ value });
   switch (fromUnit) {
     case 'mm':
       switch (toUnit) {
@@ -53,7 +53,7 @@ export const calculateTotalArmLength = (
   handleToHammerHeadLength: number,
   hammerHeadHeight: number,
 ) => {
-  validatePositiveInputs({ armLength, handleToHammerHeadLength, hammerHeadHeight });
+  validateInputsPositivity({ armLength, handleToHammerHeadLength, hammerHeadHeight });
   return roundTo3(armLength + handleToHammerHeadLength + hammerHeadHeight / 2);
 };
 
@@ -63,7 +63,7 @@ export const calculateTotalArmLength = (
  * @returns Velocity (m/s)
  */
 export const calculateVelocity = (roadLength: number, travelTime: number) => {
-  validatePositiveInputs({ roadLength, travelTime });
+  validateInputsPositivity({ roadLength, travelTime });
   return roundTo3(roadLength / travelTime);
 };
 
@@ -73,7 +73,7 @@ export const calculateVelocity = (roadLength: number, travelTime: number) => {
  * @returns Sum of Masses (kg)
  */
 export const calculateTotalMass = (hammerWeight: number, armWeight: number) => {
-  validatePositiveInputs({ hammerWeight, armWeight });
+  validateInputsPositivity({ hammerWeight, armWeight });
   return roundTo3(hammerWeight + armWeight);
 };
 
@@ -83,7 +83,7 @@ export const calculateTotalMass = (hammerWeight: number, armWeight: number) => {
  * @returns Kinetic Energy (J)
  */
 export const calculateKineticEnergy = (totalMass: number, velocity: number) => {
-  validatePositiveInputs({ totalMass, velocity });
+  validateInputsPositivity({ totalMass, velocity });
   return roundTo3(0.5 * totalMass * velocity ** 2);
 };
 
@@ -93,7 +93,7 @@ export const calculateKineticEnergy = (totalMass: number, velocity: number) => {
  * @returns Cross-sectional area (m²).
  */
 export const calculateNailShaftCrossSection = (diameter: number) => {
-  validatePositiveInputs({ diameter });
+  validateInputsPositivity({ diameter });
   return roundTo3(Math.PI * (diameter / 2) ** 2);
 };
 
@@ -108,7 +108,7 @@ export const calculateNailShaftCrossSection = (diameter: number) => {
  */
 export const calculateConeCrossSectionAvg = (diameter: number, coneLength: number, coneAngleDeg: number) => {
   if (coneAngleDeg < 0) throw new ValidationError('coneAngleDeg', coneAngleDeg, 'Cone angle must be positive.');
-  validatePositiveInputs({ diameter, coneLength });
+  validateInputsPositivity({ diameter, coneLength });
   const baseRadius = diameter / 2;
   const halfConeAngleRad = ((coneAngleDeg / 2) * Math.PI) / 180;
   const rTip = baseRadius - coneLength * Math.tan(halfConeAngleRad);
@@ -137,7 +137,7 @@ export const calculateFrictionForce = (
   nailFrictionCoefficient = 0.4,
 ) => {
   if (coneAngleDeg < 0) throw new ValidationError('coneAngleDeg', coneAngleDeg, 'Cone angle must be positive.');
-  validatePositiveInputs({ diameter, materialHardness, nailLength, coneLength, nailFrictionCoefficient });
+  validateInputsPositivity({ diameter, materialHardness, nailLength, coneLength, nailFrictionCoefficient });
   const shaftLength = nailLength - coneLength;
   const shaftArea = calculateNailShaftCrossSection(diameter);
   const coneAreaAvg = calculateConeCrossSectionAvg(diameter, coneLength, coneAngleDeg);
@@ -157,7 +157,7 @@ export const calculateFrictionForce = (
  * @returns Maximum penetration depth (m).
  */
 export const calculateMaxPenetrationDepth = (kineticEnergy: number, frictionForce: number) => {
-  validatePositiveInputs({ kineticEnergy, frictionForce });
+  validateInputsPositivity({ kineticEnergy, frictionForce });
   return roundTo3(kineticEnergy / frictionForce);
 };
 
@@ -169,6 +169,6 @@ export const calculateMaxPenetrationDepth = (kineticEnergy: number, frictionForc
  * @returns Penetration as percentage of material length.
  */
 export const calculatePenetrationPercentage = (maxPenetrationDepth: number, materialHeight: number) => {
-  validatePositiveInputs({ maxPenetrationDepth, materialHeight });
+  validateInputsPositivity({ maxPenetrationDepth, materialHeight });
   return roundTo3((maxPenetrationDepth / materialHeight) * 100);
 };

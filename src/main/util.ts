@@ -27,9 +27,9 @@ export const roundTo3 = (value: number) => {
  * Throws ValidationError on the first violation.
  *
  * Example:
- *   validatePositiveInputs({ travelTime, roadLength })
+ *   validateInputsPositivity({ travelTime, roadLength })
  */
-export const validatePositiveInputs = (inputs: Record<string, number>) => {
+export const validateInputsPositivity = (inputs: Record<string, number>) => {
   for (const [key, value] of Object.entries(inputs)) {
     if (typeof value !== 'number' || !Number.isFinite(value)) {
       throw new ValidationError(

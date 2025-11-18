@@ -52,7 +52,7 @@ export const calculateKineticEnergy = (totalMass: number, velocity: number) => {
  */
 export const calculateNailShaftCrossSection = (diameter: number) => {
   validateInputsPositivity({ diameter });
-  return roundTo3(Math.PI * (diameter / 2) ** 2);
+  return Math.PI * (diameter / 2) ** 2;
 };
 
 /**
@@ -71,7 +71,7 @@ export const calculateConeCrossSectionAvg = (diameter: number, coneLength: numbe
   const halfConeAngleRad = ((coneAngleDeg / 2) * Math.PI) / 180;
   const rTip = baseRadius - coneLength * Math.tan(halfConeAngleRad);
   const avgRadius = (baseRadius + rTip) / 2;
-  return roundTo3(Math.PI * avgRadius ** 2);
+  return Math.PI * avgRadius ** 2;
 };
 
 /**
@@ -83,7 +83,7 @@ export const calculateConeCrossSectionAvg = (diameter: number, coneLength: numbe
  * @param nailLength - Total nail length (m).
  * @param coneLength - Length of conical tip (m).
  * @param coneAngleDeg - Apex angle of cone (deg).
- * @param nailFrictionCoefficient - Steel friction coefficient (e.g. 0.4).
+ * @param nailFrictionCoefficient - Steel friction coefficient (e.g., 0.4).
  * @returns Total frictional force (N).
  */
 export const calculateFrictionForce = (
@@ -104,8 +104,7 @@ export const calculateFrictionForce = (
   const frictionCone = coneAreaAvg * materialHardness * coneLength;
 
   const totalNormalForce = frictionShaft + frictionCone;
-
-  return roundTo3(totalNormalForce * nailFrictionCoefficient);
+  return totalNormalForce * nailFrictionCoefficient;
 };
 
 /**

@@ -1,7 +1,9 @@
 import { ipcRenderer } from 'electron/renderer';
 
-export const ipcInvoke = <Key extends keyof EventPayloadMapping>(key: Key): Promise<EventPayloadMapping[Key]> =>
-  ipcRenderer.invoke(key);
+export const ipcInvoke = <Key extends keyof InvokeRequestMapping>(
+  key: Key,
+  payload: InvokeRequestMapping[Key],
+): Promise<InvokeResponseMapping[Key]> => ipcRenderer.invoke(key, payload);
 
 export const ipcOn = <Key extends keyof EventPayloadMapping>(
   key: Key,

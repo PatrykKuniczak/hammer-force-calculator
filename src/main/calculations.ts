@@ -149,7 +149,11 @@ export const computePenetrationPercentageFromSI = (data: {
   materialHeight: number;
   nailFrictionCoefficient: number;
 }) => {
-  const totalArmLength = calculateTotalArmLength(data.armLength, data.handleToHammerHeadLength, data.hammerHeadHeight);
+  const totalArmLength = calculateTotalArmLength(
+    data.armLength,
+    data.handleToHammerHeadLength,
+    data.hammerHeadHeight / 2,
+  );
   const velocity = calculateVelocity(totalArmLength, data.travelTime);
   const totalMass = calculateTotalMass(data.hammerWeight, data.armWeight);
   const kineticEnergy = calculateKineticEnergy(totalMass, velocity);

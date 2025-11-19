@@ -126,7 +126,20 @@ export const calculateMaxPenetrationDepth = (kineticEnergy: number, frictionForc
  * @returns Penetration as percentage of material length.
  */
 export const calculatePenetrationPercentage = (maxPenetrationDepth: number, materialHeight: number) => {
-  validateInputsPositivity({ maxPenetrationDepth, materialHeight });
+  if (typeof maxPenetrationDepth !== 'number' || !Number.isFinite(maxPenetrationDepth) || maxPenetrationDepth < 0) {
+    throw new ValidationError(
+      'maxPenetrationDepth',
+      maxPenetrationDepth,
+      `Invalid value for "maxPenetrationDepth": ${String(maxPenetrationDepth)}. Expected a number >= 0.`,
+    );
+  }
+  if (typeof materialHeight !== 'number' || !Number.isFinite(materialHeight) || materialHeight <= 0) {
+    throw new ValidationError(
+      'materialHeight',
+      materialHeight,
+      `Invalid value for "materialHeight": ${String(materialHeight)}. Expected a number > 0.`,
+    );
+  }
   return roundTo3((maxPenetrationDepth / materialHeight) * 100);
 };
 

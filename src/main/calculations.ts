@@ -153,7 +153,6 @@ export const computePenetrationPercentageFromSI = (data: {
   const velocity = calculateVelocity(totalArmLength, data.travelTime);
   const totalMass = calculateTotalMass(data.hammerWeight, data.armWeight);
   const kineticEnergy = calculateKineticEnergy(totalMass, velocity);
-
   const frictionForce = calculateFrictionForce(
     data.diameter,
     data.materialHardness,

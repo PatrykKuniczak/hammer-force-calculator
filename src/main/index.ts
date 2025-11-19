@@ -1,8 +1,9 @@
+import { computePenetrationPercentageFromSI } from './calculations';
 import { createMenu } from './menu';
 import { getAppPath } from './pathResolver';
 import { createTray } from './tray';
 import { electronApp, is, optimizer, platform } from '@electron-toolkit/utils';
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { join } from 'path';
 
 const handleCloseEvents = (mainWindow: BrowserWindow) => {
@@ -34,9 +35,29 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window);
   });
 
+  ipcMain.on('form:submit', (event, payload) => {
+    try {
+      event.sender.send('calc:penetration:done', computePenetrationPercentageFromSI(payload));
+    } catch (e) {
+      console.error('[main] form:submit handler error:', e);
+    }
+  });
+
+  ipcMain.handle('calc:penetration', (_event, payload: SIFormPayload) => {
+    try {
+      return computePenetrationPercentageFromSI(payload);
+    } catch (e) {
+      console.error('[main] calc:penetration handler error:', e);
+      return Number.NaN;
+    }
+  });
+
   const mainWindow = new BrowserWindow({
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      sandbox: false,
+      nodeIntegration: false,
     },
   });
 

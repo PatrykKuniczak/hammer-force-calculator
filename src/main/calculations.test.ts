@@ -8,46 +8,10 @@ import {
   calculateTotalArmLength,
   calculateTotalMass,
   calculateVelocity,
-  toSIConverter,
+  computePenetrationPercentageFromSI,
 } from './calculations';
 import { ValidationError } from './util';
 import { describe, expect, it } from 'vitest';
-
-describe('toSIConverter', () => {
-  it('converts cm to m', () => {
-    expect(toSIConverter(100, 'cm', 'm')).toBe(1);
-    // 2.5 cm -> 0.025 m -> truncated/rounded to 3 decimals: 0.025
-    expect(toSIConverter(2.5, 'cm', 'm')).toBe(0.025);
-  });
-
-  it('converts mm to m', () => {
-    expect(toSIConverter(1000, 'mm', 'm')).toBe(1);
-  });
-
-  it('converts m to cm', () => {
-    expect(toSIConverter(1, 'm', 'cm')).toBe(100);
-    expect(toSIConverter(0.025, 'm', 'cm')).toBe(2.5);
-  });
-
-  it('converts MPa to Pa', () => {
-    expect(toSIConverter(1, 'MPa', 'Pa')).toBe(1_000_000);
-    expect(toSIConverter(2.5, 'MPa', 'Pa')).toBe(2_500_000);
-  });
-
-  it('throws for unsupported units', () => {
-    expect(() => toSIConverter(1, 'km', 'm')).toThrowError(/Invalid fromUnit/);
-    expect(() => toSIConverter(1, 'cm', 'km')).toThrowError(/Invalid toUnit/);
-  });
-
-  it('throws ValidationError for negative value', () => {
-    expect(() => toSIConverter(-5, 'cm', 'm')).toThrowError(ValidationError);
-    expect(() => toSIConverter(-0.1, 'm', 'cm')).toThrowError(/Invalid value/);
-  });
-
-  it('throws ValidationError for zero value', () => {
-    expect(() => toSIConverter(0, 'cm', 'm')).toThrowError(ValidationError);
-  });
-});
 
 describe('calculateTotalArmLength', () => {
   it('sums arm, handle-to-head, and half head height', () => {
@@ -223,5 +187,43 @@ describe('calculatePenetrationPercentage', () => {
 
   it('throws ValidationError for negative material height', () => {
     expect(() => calculatePenetrationPercentage(0.01, -0.05)).toThrowError(/Invalid value/);
+  });
+});
+
+describe('computePenetrationPercentageFromSI', () => {
+  it('computes penetration percentage end-to-end from SI inputs', () => {
+    const data = {
+      armLength: 0.6,
+      handleToHammerHeadLength: 0.2,
+      hammerHeadHeight: 0.04,
+      travelTime: 0.3,
+      hammerWeight: 1.2,
+      armWeight: 4,
+      diameter: 0.04,
+      nailLength: 0.12,
+      coneLength: 0.02,
+      coneAngleDeg: 30,
+      materialHardness: 200_000_000,
+      materialHeight: 0.05,
+      nailFrictionCoefficient: 0.4,
+    };
+
+    const totalArm = calculateTotalArmLength(data.armLength, data.handleToHammerHeadLength, data.hammerHeadHeight);
+    const vel = calculateVelocity(totalArm, data.travelTime);
+    const totalMass = calculateTotalMass(data.hammerWeight, data.armWeight);
+    const kineticEnergy = calculateKineticEnergy(totalMass, vel);
+    const friction = calculateFrictionForce(
+      data.diameter,
+      data.materialHardness,
+      data.nailLength,
+      data.coneLength,
+      data.coneAngleDeg,
+      data.nailFrictionCoefficient,
+    );
+    const maxDepth = calculateMaxPenetrationDepth(kineticEnergy, friction);
+    const expected = calculatePenetrationPercentage(maxDepth, data.materialHeight);
+
+    const result = computePenetrationPercentageFromSI(data);
+    expect(result).toBe(expected);
   });
 });

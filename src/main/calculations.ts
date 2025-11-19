@@ -1,48 +1,6 @@
 import { roundTo3, validateInputsPositivity, ValidationError } from './util';
 
 /**
- * @param value - e.g `100`
- * @param fromUnit - e.g `cm`
- * @param toUnit - e.g `m`
- * @returns Converted value e.g. `1`
- */
-export const toSIConverter = (value: number, fromUnit: string, toUnit: string) => {
-  validateInputsPositivity({ value });
-  switch (fromUnit) {
-    case 'mm':
-      switch (toUnit) {
-        case 'm':
-          return roundTo3(value / 1000);
-        default:
-          throw new Error(`Invalid toUnit ${toUnit}`);
-      }
-    case 'cm':
-      switch (toUnit) {
-        case 'm':
-          return roundTo3(value / 100);
-        default:
-          throw new Error(`Invalid toUnit ${toUnit}`);
-      }
-    case 'm':
-      switch (toUnit) {
-        case 'cm':
-          return roundTo3(value * 100);
-        default:
-          throw new Error(`Invalid toUnit ${toUnit}`);
-      }
-    case 'MPa':
-      switch (toUnit) {
-        case 'Pa':
-          return roundTo3(value * 1_000_000);
-        default:
-          throw new Error(`Invalid toUnit ${toUnit}`);
-      }
-    default:
-      throw new Error(`Invalid fromUnit ${fromUnit}`);
-  }
-};
-
-/**
  * @param armLength (m)
  * @param handleToHammerHeadLength (m)
  * @param hammerHeadHeight (m)
@@ -94,7 +52,7 @@ export const calculateKineticEnergy = (totalMass: number, velocity: number) => {
  */
 export const calculateNailShaftCrossSection = (diameter: number) => {
   validateInputsPositivity({ diameter });
-  return roundTo3(Math.PI * (diameter / 2) ** 2);
+  return Math.PI * (diameter / 2) ** 2;
 };
 
 /**
@@ -113,7 +71,7 @@ export const calculateConeCrossSectionAvg = (diameter: number, coneLength: numbe
   const halfConeAngleRad = ((coneAngleDeg / 2) * Math.PI) / 180;
   const rTip = baseRadius - coneLength * Math.tan(halfConeAngleRad);
   const avgRadius = (baseRadius + rTip) / 2;
-  return roundTo3(Math.PI * avgRadius ** 2);
+  return Math.PI * avgRadius ** 2;
 };
 
 /**
@@ -125,7 +83,7 @@ export const calculateConeCrossSectionAvg = (diameter: number, coneLength: numbe
  * @param nailLength - Total nail length (m).
  * @param coneLength - Length of conical tip (m).
  * @param coneAngleDeg - Apex angle of cone (deg).
- * @param nailFrictionCoefficient - Steel friction coefficient (e.g. 0.4).
+ * @param nailFrictionCoefficient - Steel friction coefficient (e.g., 0.4).
  * @returns Total frictional force (N).
  */
 export const calculateFrictionForce = (
@@ -146,8 +104,7 @@ export const calculateFrictionForce = (
   const frictionCone = coneAreaAvg * materialHardness * coneLength;
 
   const totalNormalForce = frictionShaft + frictionCone;
-
-  return roundTo3(totalNormalForce * nailFrictionCoefficient);
+  return totalNormalForce * nailFrictionCoefficient;
 };
 
 /**
@@ -171,4 +128,40 @@ export const calculateMaxPenetrationDepth = (kineticEnergy: number, frictionForc
 export const calculatePenetrationPercentage = (maxPenetrationDepth: number, materialHeight: number) => {
   validateInputsPositivity({ maxPenetrationDepth, materialHeight });
   return roundTo3((maxPenetrationDepth / materialHeight) * 100);
+};
+
+/**
+ * Aggregates full calculation pipeline to get penetration percentage
+ * directly from SI inputs.
+ */
+export const computePenetrationPercentageFromSI = (data: {
+  armLength: number;
+  handleToHammerHeadLength: number;
+  hammerHeadHeight: number;
+  travelTime: number;
+  hammerWeight: number;
+  armWeight: number;
+  diameter: number;
+  nailLength: number;
+  coneLength: number;
+  coneAngleDeg: number;
+  materialHardness: number;
+  materialHeight: number;
+  nailFrictionCoefficient: number;
+}) => {
+  const totalArmLength = calculateTotalArmLength(data.armLength, data.handleToHammerHeadLength, data.hammerHeadHeight);
+  const velocity = calculateVelocity(totalArmLength, data.travelTime);
+  const totalMass = calculateTotalMass(data.hammerWeight, data.armWeight);
+  const kineticEnergy = calculateKineticEnergy(totalMass, velocity);
+  const frictionForce = calculateFrictionForce(
+    data.diameter,
+    data.materialHardness,
+    data.nailLength,
+    data.coneLength,
+    data.coneAngleDeg,
+    data.nailFrictionCoefficient,
+  );
+
+  const maxDepth = calculateMaxPenetrationDepth(kineticEnergy, frictionForce);
+  return calculatePenetrationPercentage(maxDepth, data.materialHeight);
 };
